@@ -74,6 +74,7 @@
         }
         function drawRDP() {
             document.querySelector("#epsRangeLabel").innerText = "eps: " + slider.value
+            ctx.fillStyle = "#00F"
             if (points.length > 2) {
                 ctx.clearRect(0, 0, canvas.width, canvas.height)
 
@@ -89,15 +90,20 @@
                 let eps = slider.value;
                 new_points = RDP(points, 0, points.length - 1, eps)
                 ctx.strokeStyle = "#F00";
-                ctx.beginPath()
                 ctx.lineWidth = 2;
                 ctx.moveTo(new_points[0][0], new_points[0][1])
+                ctx.beginPath()
                 for (let i = 0; i < new_points.length; ++i) {
                     ctx.lineTo(new_points[i][0], new_points[i][1])
-                    // ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
-                    ctx.stroke()
                 }
+                ctx.stroke()
                 ctx.closePath()
+                for (let i = 0; i < new_points.length; ++i) {
+                    ctx.beginPath()
+                    ctx.arc(new_points[i][0], new_points[i][1], 5, 0, 2 * Math.PI, false);
+                    ctx.fill()
+                    ctx.closePath()
+                }
                 ctx.lineWidth = 1
                 ctx.strokeStyle = "#000";
             }
