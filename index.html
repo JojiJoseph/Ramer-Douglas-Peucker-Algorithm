@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RDP Algorithm</title>
+    <style>
+        #canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Ramer-Douglas-Peucker Demo</h1>
+    <p>Draw a curve</p>
+    <label for="epsRange" id="epsRangeLabel">eps: 10</label><br><input type="range" min="1" max="300" value="10"
+        class="slider" id="epsRange">
+    <br>
+    <canvas id="canvas" width="800" height="600"></canvas>
+    <script>
+        var canvas = document.querySelector("#canvas")
+        var slider = document.querySelector("#epsRange")
+        var ctx = canvas.getContext("2d")
+        ctx.strokeStyle = "#000"
+        var isMouseDown = false;
+        var points = []
+        var preX = 0
+        var preY = 0
+        function RDP(points, left, right, eps = 20) {
+            if (left > right)
+                return []
+            let idx = -1
+            let max_d = 0
+            for (let i = left; i < right; ++i) {
+                let d = (points[right][0] - points[left][0]) * (points[i][1] - points[left][1]) - (points[right][1] - points[left][1]) * (points[i][0] - points[left][0])
+                d = d / Math.sqrt((points[right][0] - points[left][0]) * (points[right][0] - points[left][0]) + (points[right][1] - points[left][1]) * (points[right][1] - points[left][1]))
+                if (d < 0) {
+                    d = -d
+                }
+                if (d > max_d) {
+                    max_d = d
+                    idx = i
+                }
+            }
+            if (max_d > eps) {
+                let left_arr = RDP(points, left, idx, eps)
+                right_arr = RDP(points, idx, right, eps)
+                return left_arr.slice(0, left_arr.length - 1).concat(right_arr)
+            }
+
+            return [points[left], points[right]]
+        }
+        canvas.onmousemove = function (event) {
+            if (isMouseDown) {
+                points.push([event.offsetX, event.offsetY])
+                ctx.lineTo(event.offsetX, event.offsetY)
+                ctx.stroke()
+                preX = event.offsetX;
+                preY = event.offsetY;
+
+            }
+
+        }
+        canvas.onmousedown = function (event) {
+            isMouseDown = true;
+            preX = event.offsetX
+            preY = event.offsetY
+            points = [[preX, preY]]
+            ctx.beginPath()
+            ctx.moveTo(preX, preY)
+        }
+        function drawRDP() {
+            document.querySelector("#epsRangeLabel").innerText = "eps: " + slider.value
+            if (points.length > 2) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+                ctx.beginPath()
+                ctx.lineWidth = 1;
+                ctx.moveTo(points[0][0], points[0][1])
+                for (let i = 0; i < points.length; ++i) {
+                    ctx.lineTo(points[i][0], points[i][1])
+                    ctx.stroke()
+                }
+                ctx.closePath()
+
+                let eps = slider.value;
+                new_points = RDP(points, 0, points.length - 1, eps)
+                ctx.strokeStyle = "#F00";
+                ctx.beginPath()
+                ctx.lineWidth = 2;
+                ctx.moveTo(new_points[0][0], new_points[0][1])
+                for (let i = 0; i < new_points.length; ++i) {
+                    ctx.lineTo(new_points[i][0], new_points[i][1])
+                    // ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+                    ctx.stroke()
+                }
+                ctx.closePath()
+                ctx.lineWidth = 1
+                ctx.strokeStyle = "#000";
+            }
+        }
+        slider.onchange = drawRDP
+        canvas.onmouseup = function (event) {
+            isMouseDown = false;
+            ctx.closePath()
+            drawRDP()
+
+        }
+    </script>
+</body>
+
+</html>
